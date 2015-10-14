@@ -1,5 +1,5 @@
-# linux-kvmvga-pkgbuild
-This is an Arch Linux PKGBUILD for a kernel based on Linux Mainline v4.1, patched for better VGA passthrough compatibility. Use at your own risk!
+# linux-vgapatch-pkgbuild
+This is an Arch Linux PKGBUILD for a kernel based on Linux Mainline v4.2, patched for better VGA passthrough compatibility. Use at your own risk!
 
 It includes the following patches by Alex Williamson:
 - [i915: Add module option to support VGA arbiter on HD devices](https://lkml.org/lkml/2014/5/9/517)
