@@ -1,4 +1,4 @@
-From 2c752110c8c69668ea28703d5dd5a90540fc6b90 Mon Sep 17 00:00:00 2001
+From de3ef9045e2d6bbf901920a5dfb6a2eaf9230dfd Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] [PATCH] i915 VGA arbiter patch
@@ -13,10 +13,10 @@ By Alex Williamson
  5 files changed, 62 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_dma.c b/drivers/gpu/drm/i915/i915_dma.c
-index d2df321..9edbedb 100644
+index b4741d1..71f0d1b 100644
 --- a/drivers/gpu/drm/i915/i915_dma.c
 +++ b/drivers/gpu/drm/i915/i915_dma.c
-@@ -400,10 +400,20 @@ static int i915_load_modeset_init(struct drm_device *dev)
+@@ -378,10 +378,20 @@ static int i915_load_modeset_init(struct drm_device *dev)
  	 * If we are a secondary display controller (!PCI_DISPLAY_CLASS_VGA),
  	 * then we do not take part in VGA arbitration and the
  	 * vga_client_register() fails with -ENODEV.
@@ -41,7 +41,7 @@ index d2df321..9edbedb 100644
  
  	intel_register_dsm_handler();
  
-@@ -444,6 +454,13 @@ static int i915_load_modeset_init(struct drm_device *dev)
+@@ -424,6 +434,13 @@ static int i915_load_modeset_init(struct drm_device *dev)
  	if (ret)
  		goto cleanup_gem;
  
@@ -56,22 +56,22 @@ index d2df321..9edbedb 100644
  	intel_hpd_init(dev_priv);
  
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index fd1de45..bb20a4f 100644
+index f4af19a..61cf3d7 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -2555,6 +2555,7 @@ struct i915_params {
+@@ -2667,6 +2667,7 @@ struct i915_params {
  	bool reset;
  	bool disable_display;
  	bool disable_vtd_wa;
 +	bool enable_hd_vgaarb;
+ 	bool enable_guc_submission;
+ 	int guc_log_level;
  	int use_mmio_flip;
- 	int mmio_debug;
- 	bool verbose_state_checks;
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index 8ac5a1b..d492d47 100644
+index 4be13a5..b9cf0ee 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
-@@ -49,6 +49,7 @@ struct i915_params i915 __read_mostly = {
+@@ -48,6 +48,7 @@ struct i915_params i915 __read_mostly = {
  	.disable_display = 0,
  	.enable_cmd_parser = 1,
  	.disable_vtd_wa = 0,
@@ -79,8 +79,8 @@ index 8ac5a1b..d492d47 100644
  	.use_mmio_flip = 0,
  	.mmio_debug = 0,
  	.verbose_state_checks = 1,
-@@ -165,6 +166,11 @@ MODULE_PARM_DESC(disable_display, "Disable display (default: false)");
- module_param_named(disable_vtd_wa, i915.disable_vtd_wa, bool, 0600);
+@@ -162,6 +163,11 @@ MODULE_PARM_DESC(disable_display, "Disable display (default: false)");
+ module_param_named_unsafe(disable_vtd_wa, i915.disable_vtd_wa, bool, 0600);
  MODULE_PARM_DESC(disable_vtd_wa, "Disable all VT-d workarounds (default: false)");
  
 +module_param_named(enable_hd_vgaarb, i915.enable_hd_vgaarb, bool, 0444);
@@ -88,14 +88,14 @@ index 8ac5a1b..d492d47 100644
 +	"Enable support for VGA arbitration on Intel HD IGD. (default: false)");
 +
 +
- module_param_named(enable_cmd_parser, i915.enable_cmd_parser, int, 0600);
+ module_param_named_unsafe(enable_cmd_parser, i915.enable_cmd_parser, int, 0600);
  MODULE_PARM_DESC(enable_cmd_parser,
  		 "Enable command parsing (1=enabled [default], 0=disabled)");
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 87476ff..13501b6 100644
+index 32cf973..b67e99a 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -14627,6 +14627,35 @@ static void i915_disable_vga(struct drm_device *dev)
+@@ -14852,6 +14852,35 @@ static void i915_disable_vga(struct drm_device *dev)
  	POSTING_READ(vga_reg);
  }
  
@@ -130,8 +130,8 @@ index 87476ff..13501b6 100644
 +
  void intel_modeset_init_hw(struct drm_device *dev)
  {
- 	intel_prepare_ddi(dev);
-@@ -14960,6 +14989,7 @@ void i915_redisable_vga_power_on(struct drm_device *dev)
+ 	intel_update_cdclk(dev);
+@@ -15205,6 +15234,7 @@ void i915_redisable_vga_power_on(struct drm_device *dev)
  	if (!(I915_READ(vga_reg) & VGA_DISP_DISABLE)) {
  		DRM_DEBUG_KMS("Something enabled VGA plane, disabling it\n");
  		i915_disable_vga(dev);
@@ -139,20 +139,20 @@ index 87476ff..13501b6 100644
  	}
  }
  
-@@ -15247,6 +15277,8 @@ void intel_modeset_cleanup(struct drm_device *dev)
+@@ -15547,6 +15577,8 @@ void intel_modeset_cleanup(struct drm_device *dev)
  
- 	intel_fbc_disable(dev);
+ 	intel_fbc_disable(dev_priv);
  
 +	i915_enable_vga_mem(dev);
 +
- 	mutex_unlock(&dev->struct_mutex);
- 
  	/* flush any delayed tasks or pending work */
+ 	flush_scheduled_work();
+ 
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 1059283..26fcdf1 100644
+index 0d00f07..589a3f0 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
-@@ -1429,4 +1429,6 @@ void intel_plane_destroy_state(struct drm_plane *plane,
+@@ -1476,4 +1476,6 @@ void intel_plane_destroy_state(struct drm_plane *plane,
  			       struct drm_plane_state *state);
  extern const struct drm_plane_helper_funcs intel_plane_helper_funcs;
  
@@ -160,5 +160,5 @@ index 1059283..26fcdf1 100644
 +
  #endif /* __INTEL_DRV_H__ */
 -- 
-2.6.0
+2.7.0
 
