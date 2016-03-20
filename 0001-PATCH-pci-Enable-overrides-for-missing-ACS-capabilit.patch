@@ -1,4 +1,4 @@
-From 76b235190b4a6538708f3ea5c6be48b58b970857 Mon Sep 17 00:00:00 2001
+From cb38caabde302f337ae4b710ce296f7e134e9809 Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 14:44:35 +0200
 Subject: [PATCH 1/2] [PATCH] pci: Enable overrides for missing ACS
@@ -10,10 +10,10 @@ By Alex Williamson
  1 file changed, 102 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 7e32730..0835b8d 100644
+index 0575a1e..79fe02e 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -3686,6 +3686,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+@@ -3704,6 +3704,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
@@ -120,7 +120,7 @@ index 7e32730..0835b8d 100644
  /*
   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
   * class code.  Fix it.
-@@ -3966,6 +4066,8 @@ static const struct pci_dev_acs_enabled {
+@@ -3984,6 +4084,8 @@ static const struct pci_dev_acs_enabled {
  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
@@ -130,5 +130,5 @@ index 7e32730..0835b8d 100644
  };
  
 -- 
-2.7.0
+2.7.2
 
