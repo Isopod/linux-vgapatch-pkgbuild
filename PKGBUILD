@@ -3,9 +3,9 @@
 
 #pkgbase=linux-mainline               # Build stock -ARCH kernel
 pkgbase=linux-vgapatch       # Build kernel with a different name
-_srcname=linux-4.5
+_srcname=linux-4.6
 #_patchname=patch-4.1-rc7
-pkgver=4.5
+pkgver=4.6
 pkgrel=1
 arch=('i686' 'x86_64')
 url="http://www.kernel.org/"
@@ -22,7 +22,7 @@ source=("https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
         '0001-PATCH-pci-Enable-overrides-for-missing-ACS-capabilit.patch'
         '0002-PATCH-i915-VGA-arbiter-patch.patch'
         )
-sha256sums=('a40defb401e01b37d6b8c8ad5c1bbab665be6ac6310cdeed59950c96b31a519c'
+sha256sums=('a93771cd5a8ad27798f22e9240538dfea48d3a2bf2a6a6ab415de3f02d25d866'
             'f4c6a5c2fc0ee2b792e43f4c1846b995051901a502fb97885d2296af55fa193d'
             '58d49d4a3f6152394d903fd09113116fa3a0939d7d7ee419b2edbbd0c30e1755'
             'f0d90e756f14533ee67afda280500511a62465b4f76adcc5effa95a40045179c'
