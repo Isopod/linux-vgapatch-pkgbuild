@@ -1,8 +1,7 @@
-From e95d9bacf149b9e54f29c1a41060df06cf2a1c9a Mon Sep 17 00:00:00 2001
+From d7334192f868c44a7717a21bcb494026138179bf Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 14:44:35 +0200
-Subject: [PATCH 1/2] [PATCH] pci: Enable overrides for missing ACS
- capabilities
+Subject: [PATCH 1/2] pci: Enable overrides for missing ACS capabilities
 
 By Alex Williamson
 ---
@@ -10,10 +9,10 @@ By Alex Williamson
  1 file changed, 102 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8e67802..07a14b8 100644
+index 44e0ff3..65cc354 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -3733,6 +3733,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+@@ -3799,6 +3799,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
@@ -118,9 +117,9 @@ index 8e67802..07a14b8 100644
 +	return -ENOTTY;
 +}
  /*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-@@ -4028,6 +4128,8 @@ static const struct pci_dev_acs_enabled {
+  * MIC x200 NTB forwards PCIe traffic using multiple alien RIDs. They have to
+  * be added as aliases to the DMA device in order to allow buffer access
+@@ -4160,6 +4260,8 @@ static const struct pci_dev_acs_enabled {
  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
  	/* Cavium ThunderX */
  	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
@@ -130,5 +129,5 @@ index 8e67802..07a14b8 100644
  };
  
 -- 
-2.8.3
+2.10.2
 
