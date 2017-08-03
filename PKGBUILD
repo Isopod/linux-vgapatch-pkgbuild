@@ -1,40 +1,39 @@
-# $Id$
+#
 # Maintainer: Philip Zander <philip.zander@gmail.com>
+#
+# Based on the linux mainline package by:
+# Maintainer: Mikael Eriksson <mikael_eriksson@miffe.org>
+# Based on the linux package by:
+# Maintainer: Tobias Powalowski <tpowa@archlinux.org>
+# Maintainer: Thomas Baechler <thomas@archlinux.org>
 
-#pkgbase=linux               # Build stock -ARCH kernel
-pkgbase=linux-vgapatch       # Build kernel with a different name
-_srcname=linux-4.8
-pkgver=4.8
+pkgbase=linux-vgapatch               # Build stock -ARCH kernel
+#pkgbase=linux-custom       # Build kernel with a different name
+_srcname=linux-4.12
+pkgver=4.12
 pkgrel=1
 arch=('i686' 'x86_64')
-url="http://www.kernel.org/"
+url="https://www.kernel.org/"
 license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'libelf')
 options=('!strip')
-source=("https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
-        "https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.sign"
-#        "https://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.xz"
-#        "https://www.kernel.org/pub/linux/kernel/v4.x/patch-${pkgver}.sign"
+source=("https://git.kernel.org/torvalds/t/${_srcname}.tar.gz"
+        #"https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.sign"
         # the main kernel config files
-        'config' 'config.x86_64'
+        'config.i686' 'config.x86_64'
         # pacman hook for initramfs regeneration
-        '99-linux.hook'
+        '90-linux.hook'
         # standard config files for mkinitcpio ramdisk
         'linux.preset'
-        'change-default-console-loglevel.patch'
         '0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch'
         '0002-i915-VGA-arbiter-patch.patch'
         )
 
-sha256sums=('3e9150065f193d3d94bcf46a1fe9f033c7ef7122ab71d75a7fb5a2f0c9a7e11a'
-            'SKIP'
-#            '53d84946cbe641a2a74ed6cbdd35840bb4947cefd34a764c31b7dac5cde5c696'
-#            'SKIP'
-            '2ac8818414beb7dbacbd3ad450c516e6ada804827132a7132f63b8189e5f5151'
-            '41b9a64542befd2fea170776e8ec22a7d158dd3273633afc9b91662c448cd90a'
+sha256sums=('f51ed5e24bf3b10de6d6a3073bb46269555b151f12a4e791a6027a05e0af6b42'
+            'e4e928488d35ba2b4049bd224dee87be9eb574ed3c1882f22c8fd5d8674c9abd'
+            '2e38528bd2f1be712f5a274b66882c41d2a9cf996b3a05b4a772c8ba7309b261'
             '834bd254b56ab71d73f59b3221f056c72f559553c04718e350ab2a3e2991afe0'
             'ad6344badc91ad0630caacde83f7f9b97276f80d26a20619a87952be65492c65'
-            '1256b241cd477b265a3c2d64bdc19ffe3c9bbcee82ea3994c590c2c76e767d99'
             SKIP
             SKIP)
 validpgpkeys=(
@@ -47,8 +46,9 @@ _kernelname=${pkgbase#linux}
 prepare() {
   cd "${srcdir}/${_srcname}"
 
+  # mainline: not needed
   # add upstream patch
-  #patch -p1 -i "${srcdir}/patch-${pkgver}"
+  # patch -p1 -i "${srcdir}/patch-${pkgver}"
 
   # add latest fixes from stable queue, if needed
   # http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git
@@ -56,17 +56,13 @@ prepare() {
   # set DEFAULT_CONSOLE_LOGLEVEL to 4 (same value as the 'quiet' kernel param)
   # remove this when a Kconfig knob is made available by upstream
   # (relevant patch sent upstream: https://lkml.org/lkml/2011/7/26/227)
-  patch -p1 -i "${srcdir}/change-default-console-loglevel.patch"
+  # patch -p1 -i "${srcdir}/change-default-console-loglevel.patch"
 
   # pcie vga passthrough patches
   patch -p1 -i "${srcdir}/0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch"
   patch -p1 -i "${srcdir}/0002-i915-VGA-arbiter-patch.patch"
 
-  if [ "${CARCH}" = "x86_64" ]; then
-    cat "${srcdir}/config.x86_64" > ./.config
-  else
-    cat "${srcdir}/config" > ./.config
-  fi
+  cat "${srcdir}/config.${CARCH}" > ./.config
 
   if [ "${_kernelname}" != "" ]; then
     sed -i "s|CONFIG_LOCALVERSION=.*|CONFIG_LOCALVERSION=\"${_kernelname}\"|g" ./.config
@@ -74,13 +70,10 @@ prepare() {
   fi
 
   # set extraversion to pkgrel
-  sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
+  #sed -ri "s|^(EXTRAVERSION =).*|\1 -${pkgrel}|" Makefile
 
   # don't run depmod on 'make install'. We'll do this ourselves in packaging
   sed -i '2iexit 0' scripts/depmod.sh
-
-  # get kernel version
-  make prepare
 
   # load configuration
   # Configure the kernel. Replace the line below with one of your choice.
@@ -88,7 +81,11 @@ prepare() {
   #make nconfig # new CLI menu for configuration
   #make xconfig # X-based configuration
   #make oldconfig # using old config from previous kernel version
+  make olddefconfig
   # ... or manually edit .config
+
+  # get kernel version
+  make prepare
 
   # rewrite configuration
   yes "" | make config >/dev/null
@@ -131,8 +128,8 @@ _package() {
     install -D -m644 /dev/stdin "${pkgdir}/etc/mkinitcpio.d/${pkgbase}.preset"
 
   # install pacman hook for initramfs regeneration
-  sed "s|%PKGBASE%|${pkgbase}|g" "${srcdir}/99-linux.hook" |
-    install -D -m644 /dev/stdin "${pkgdir}/usr/share/libalpm/hooks/99-${pkgbase}.hook"
+  sed "s|%PKGBASE%|${pkgbase}|g" "${srcdir}/90-linux.hook" |
+    install -D -m644 /dev/stdin "${pkgdir}/usr/share/libalpm/hooks/90-${pkgbase}.hook"
 
   # remove build and source links
   rm -f "${pkgdir}"/lib/modules/${_kernver}/{source,build}
@@ -152,7 +149,7 @@ _package() {
   mv "${pkgdir}/lib" "${pkgdir}/usr/"
 
   # add vmlinux
-  install -D -m644 vmlinux "${pkgdir}/usr/lib/modules/${_kernver}/build/vmlinux" 
+  install -D -m644 vmlinux "${pkgdir}/usr/lib/modules/${_kernver}/build/vmlinux"
 }
 
 _package-headers() {
@@ -256,7 +253,7 @@ _package-headers() {
   # add objtool for external module building and enabled VALIDATION_STACK option
   if [ -f tools/objtool/objtool ];  then
       mkdir -p "${pkgdir}/usr/lib/modules/${_kernver}/build/tools/objtool"
-      cp -a tools/objtool/objtool ${pkgdir}/usr/lib/modules/${_kernver}/build/tools/objtool/ 
+      cp -a tools/objtool/objtool ${pkgdir}/usr/lib/modules/${_kernver}/build/tools/objtool/
   fi
 
   chown -R root.root "${pkgdir}/usr/lib/modules/${_kernver}/build"
@@ -276,7 +273,7 @@ _package-headers() {
 
   # remove unneeded architectures
   rm -rf "${pkgdir}"/usr/lib/modules/${_kernver}/build/arch/{alpha,arc,arm,arm26,arm64,avr32,blackfin,c6x,cris,frv,h8300,hexagon,ia64,m32r,m68k,m68knommu,metag,mips,microblaze,mn10300,openrisc,parisc,powerpc,ppc,s390,score,sh,sh64,sparc,sparc64,tile,unicore32,um,v850,xtensa}
-  
+
   # remove a files already in linux-docs package
   rm -f "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/kbuild/Kconfig.recursion-issue-01"
   rm -f "${pkgdir}/usr/lib/modules/${_kernver}/build/Documentation/kbuild/Kconfig.recursion-issue-02"
