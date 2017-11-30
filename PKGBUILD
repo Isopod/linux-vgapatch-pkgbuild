@@ -9,15 +9,15 @@
 
 pkgbase=linux-vgapatch               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
-_srcname=linux-4.12
-pkgver=4.12
+_srcname=linux-4.14
+pkgver=4.14
 pkgrel=1
 arch=('i686' 'x86_64')
 url="https://www.kernel.org/"
 license=('GPL2')
 makedepends=('xmlto' 'docbook-xsl' 'kmod' 'inetutils' 'bc' 'libelf')
 options=('!strip')
-source=("https://git.kernel.org/torvalds/t/${_srcname}.tar.gz"
+source=("https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.xz"
         #"https://www.kernel.org/pub/linux/kernel/v4.x/${_srcname}.tar.sign"
         # the main kernel config files
         'config.i686' 'config.x86_64'
@@ -29,7 +29,7 @@ source=("https://git.kernel.org/torvalds/t/${_srcname}.tar.gz"
         '0002-i915-VGA-arbiter-patch.patch'
         )
 
-sha256sums=('f51ed5e24bf3b10de6d6a3073bb46269555b151f12a4e791a6027a05e0af6b42'
+sha256sums=('f81d59477e90a130857ce18dc02f4fbe5725854911db1e7ba770c7cd350f96a7'
             'e4e928488d35ba2b4049bd224dee87be9eb574ed3c1882f22c8fd5d8674c9abd'
             '2e38528bd2f1be712f5a274b66882c41d2a9cf996b3a05b4a772c8ba7309b261'
             '834bd254b56ab71d73f59b3221f056c72f559553c04718e350ab2a3e2991afe0'
