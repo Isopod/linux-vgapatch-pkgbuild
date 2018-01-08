@@ -1,4 +1,4 @@
-From b2eef720476e545a794a136bfb47720294af5246 Mon Sep 17 00:00:00 2001
+From 14a997ca18372aec10c566b784b9754be9fa1534 Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] i915 VGA arbiter patch
@@ -13,7 +13,7 @@ By Alex Williamson
  5 files changed, 64 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 9f45cfeae775..27034a492678 100644
+index 82498f8232eb..764c39cccfbc 100644
 --- a/drivers/gpu/drm/i915/i915_drv.c
 +++ b/drivers/gpu/drm/i915/i915_drv.c
 @@ -629,10 +629,20 @@ static int i915_load_modeset_init(struct drm_device *dev)
@@ -92,10 +92,10 @@ index ac844709c97e..5d9cacfe70db 100644
  #define MEMBER(T, member) T member
  struct i915_params {
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 5ebdb63330dd..bf768ad804fd 100644
+index 1c73d5542681..313ad8fb5850 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -14382,6 +14382,37 @@ static void i915_disable_vga(struct drm_i915_private *dev_priv)
+@@ -14400,6 +14400,37 @@ static void i915_disable_vga(struct drm_i915_private *dev_priv)
  	POSTING_READ(vga_reg);
  }
  
@@ -133,7 +133,7 @@ index 5ebdb63330dd..bf768ad804fd 100644
  void intel_modeset_init_hw(struct drm_device *dev)
  {
  	struct drm_i915_private *dev_priv = to_i915(dev);
-@@ -14880,6 +14911,7 @@ void i915_redisable_vga_power_on(struct drm_i915_private *dev_priv)
+@@ -14899,6 +14930,7 @@ void i915_redisable_vga_power_on(struct drm_i915_private *dev_priv)
  	if (!(I915_READ(vga_reg) & VGA_DISP_DISABLE)) {
  		DRM_DEBUG_KMS("Something enabled VGA plane, disabling it\n");
  		i915_disable_vga(dev_priv);
@@ -141,7 +141,7 @@ index 5ebdb63330dd..bf768ad804fd 100644
  	}
  }
  
-@@ -15273,6 +15305,8 @@ void intel_modeset_cleanup(struct drm_device *dev)
+@@ -15292,6 +15324,8 @@ void intel_modeset_cleanup(struct drm_device *dev)
  
  	intel_fbc_global_disable(dev_priv);
  
