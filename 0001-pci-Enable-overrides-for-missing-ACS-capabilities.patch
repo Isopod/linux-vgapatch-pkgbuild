@@ -1,4 +1,4 @@
-From 9f9aa18f729e4a0bf91a163f92b1ea1e870c9aab Mon Sep 17 00:00:00 2001
+From 16eceb50d1b59ac2b2b22d1dfb776d127e850eda Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 14:44:35 +0200
 Subject: [PATCH 1/2] pci: Enable overrides for missing ACS capabilities
@@ -9,10 +9,10 @@ By Alex Williamson
  1 file changed, 102 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index cc616a5f6a8f..8daa73cf7ee5 100644
+index ca9ed5774eb1..033722b63329 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -3996,6 +3996,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
+@@ -4125,6 +4125,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
@@ -119,15 +119,15 @@ index cc616a5f6a8f..8daa73cf7ee5 100644
  /*
   * MIC x200 NTB forwards PCIe traffic using multiple alien RIDs. They have to
   * be added as aliases to the DMA device in order to allow buffer access
-@@ -4560,6 +4660,8 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_AMPERE, 0xE00A, pci_quirk_xgene_acs },
- 	{ PCI_VENDOR_ID_AMPERE, 0xE00B, pci_quirk_xgene_acs },
- 	{ PCI_VENDOR_ID_AMPERE, 0xE00C, pci_quirk_xgene_acs },
+@@ -4796,6 +4896,8 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_ZHAOXIN, 0x9083, pci_quirk_mf_endpoint_acs },
+ 	/* Zhaoxin Root/Downstream Ports */
+ 	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
 +	/* Any */
 +	{ PCI_ANY_ID, PCI_ANY_ID, pcie_acs_overrides },
  	{ 0 }
  };
  
 -- 
-2.21.0
+2.27.0
 

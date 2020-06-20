@@ -1,46 +1,113 @@
-From 3eadff9b4d519e1f9ab677b3af75f0ace72862f7 Mon Sep 17 00:00:00 2001
+From 3b5e8f0ea4e4d076f247c7633bb82d5684a1fbac Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] i915 VGA arbiter patch
 
 By Alex Williamson
 ---
- drivers/gpu/drm/i915/i915_drv.c      | 22 +++++++++++++++---
- drivers/gpu/drm/i915/i915_params.c   |  4 ++++
- drivers/gpu/drm/i915/i915_params.h   |  3 ++-
- drivers/gpu/drm/i915/intel_display.c | 34 ++++++++++++++++++++++++++++
- drivers/gpu/drm/i915/intel_drv.h     |  3 +++
- 5 files changed, 62 insertions(+), 4 deletions(-)
+ drivers/gpu/drm/i915/display/intel_display.c |  2 +
+ drivers/gpu/drm/i915/display/intel_vga.c     | 39 ++++++++++++++++++--
+ drivers/gpu/drm/i915/display/intel_vga.h     |  2 +
+ drivers/gpu/drm/i915/i915_drv.c              |  6 +++
+ drivers/gpu/drm/i915/i915_params.c           |  4 ++
+ drivers/gpu/drm/i915/i915_params.h           |  3 +-
+ 6 files changed, 52 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 9df65d386d11..f907a53330c6 100644
---- a/drivers/gpu/drm/i915/i915_drv.c
-+++ b/drivers/gpu/drm/i915/i915_drv.c
-@@ -663,10 +663,20 @@ static int i915_load_modeset_init(struct drm_device *dev)
- 	 * If we are a secondary display controller (!PCI_DISPLAY_CLASS_VGA),
+diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
+index 346846609f45..bd4a37ee4fee 100644
+--- a/drivers/gpu/drm/i915/display/intel_display.c
++++ b/drivers/gpu/drm/i915/display/intel_display.c
+@@ -18753,6 +18753,8 @@ static void intel_hpd_poll_fini(struct drm_i915_private *i915)
+ /* part #1: call before irq uninstall */
+ void intel_modeset_driver_remove(struct drm_i915_private *i915)
+ {
++	intel_vga_enable_mem(i915);
++
+ 	flush_workqueue(i915->flip_wq);
+ 	flush_workqueue(i915->modeset_wq);
+ 
+diff --git a/drivers/gpu/drm/i915/display/intel_vga.c b/drivers/gpu/drm/i915/display/intel_vga.c
+index be333699c515..7942350e0166 100644
+--- a/drivers/gpu/drm/i915/display/intel_vga.c
++++ b/drivers/gpu/drm/i915/display/intel_vga.c
+@@ -49,6 +49,7 @@ void intel_vga_redisable_power_on(struct drm_i915_private *dev_priv)
+ 		drm_dbg_kms(&dev_priv->drm,
+ 			    "Something enabled VGA plane, disabling it\n");
+ 		intel_vga_disable(dev_priv);
++		intel_vga_disable_mem(dev_priv);
+ 	}
+ }
+ 
+@@ -134,6 +135,36 @@ intel_vga_set_decode(void *cookie, bool enable_decode)
+ 		return VGA_RSRC_NORMAL_IO | VGA_RSRC_NORMAL_MEM;
+ }
+ 
++void intel_vga_enable_mem(struct drm_i915_private *i915)
++{
++	struct pci_dev *pdev = i915->drm.pdev;
++	/* Enable VGA memory on Intel HD */
++	if (i915_modparams.enable_hd_vgaarb && HAS_PCH_SPLIT(i915)) {
++		vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
++		outb(inb(VGA_MSR_READ) | VGA_MSR_MEM_EN, VGA_MSR_WRITE);
++		vga_set_legacy_decoding(pdev, VGA_RSRC_LEGACY_IO |
++						   VGA_RSRC_LEGACY_MEM |
++						   VGA_RSRC_NORMAL_IO |
++						   VGA_RSRC_NORMAL_MEM);
++		vga_put(pdev, VGA_RSRC_LEGACY_IO);
++	}
++}
++
++void intel_vga_disable_mem(struct drm_i915_private *i915)
++{
++	struct pci_dev *pdev = i915->drm.pdev;
++	/* Disable VGA memory on Intel HD */
++	if (i915_modparams.enable_hd_vgaarb && HAS_PCH_SPLIT(i915)) {
++		vga_get_uninterruptible(pdev, VGA_RSRC_LEGACY_IO);
++		outb(inb(VGA_MSR_READ) & ~VGA_MSR_MEM_EN, VGA_MSR_WRITE);
++		vga_set_legacy_decoding(pdev, VGA_RSRC_LEGACY_IO |
++						   VGA_RSRC_NORMAL_IO |
++						   VGA_RSRC_NORMAL_MEM);
++		vga_put(pdev, VGA_RSRC_LEGACY_IO);
++	}
++}
++
++
+ int intel_vga_register(struct drm_i915_private *i915)
+ {
+ 	struct pci_dev *pdev = i915->drm.pdev;
+@@ -147,9 +178,11 @@ int intel_vga_register(struct drm_i915_private *i915)
  	 * then we do not take part in VGA arbitration and the
  	 * vga_client_register() fails with -ENODEV.
-+	 *
-+	 * NB.  The set_decode callback here actually only works on GMCH
-+	 * devices, on newer HD devices we can only disable VGA MMIO space.
-+	 * Disabling VGA I/O space requires disabling I/O in the PCI command
-+	 * register.  Nonetheless, we like to pretend that we participate in
-+	 * VGA arbitration and can dynamically disable VGA I/O space because
-+	 * this makes X happy, even though it's a complete lie.
  	 */
--	ret = vga_client_register(pdev, dev_priv, NULL, i915_vga_set_decode);
+-	ret = vga_client_register(pdev, i915, NULL, intel_vga_set_decode);
 -	if (ret && ret != -ENODEV)
--		goto out;
-+
-+	if (!i915_modparams.enable_hd_vgaarb || !HAS_PCH_SPLIT(dev_priv)) {
-+		ret = vga_client_register(dev->pdev, dev_priv, NULL, i915_vga_set_decode);
+-		return ret;
++	if (!i915_modparams.enable_hd_vgaarb || !HAS_PCH_SPLIT(i915)) {
++		ret = vga_client_register(pdev, i915, NULL, intel_vga_set_decode);
 +		if (ret && ret != -ENODEV)
-+			goto out;
++			return ret;
 +	}
  
- 	intel_register_dsm_handler();
+ 	return 0;
+ }
+diff --git a/drivers/gpu/drm/i915/display/intel_vga.h b/drivers/gpu/drm/i915/display/intel_vga.h
+index ba5b55b917f0..d74c72ee985e 100644
+--- a/drivers/gpu/drm/i915/display/intel_vga.h
++++ b/drivers/gpu/drm/i915/display/intel_vga.h
+@@ -12,6 +12,8 @@ void intel_vga_reset_io_mem(struct drm_i915_private *i915);
+ void intel_vga_disable(struct drm_i915_private *i915);
+ void intel_vga_redisable(struct drm_i915_private *i915);
+ void intel_vga_redisable_power_on(struct drm_i915_private *i915);
++void intel_vga_enable_mem(struct drm_i915_private *i915);
++void intel_vga_disable_mem(struct drm_i915_private *i915);
+ int intel_vga_register(struct drm_i915_private *i915);
+ void intel_vga_unregister(struct drm_i915_private *i915);
  
-@@ -706,6 +716,12 @@ static int i915_load_modeset_init(struct drm_device *dev)
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+index 81a4621853db..d15a29c2e304 100644
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
+@@ -276,6 +276,12 @@ static int i915_driver_modeset_probe(struct drm_i915_private *i915)
  	if (ret)
  		goto cleanup_gem;
  
@@ -48,16 +115,16 @@ index 9df65d386d11..f907a53330c6 100644
 +	 * Must do this after fbcon init so that
 +	 * vgacon_save_screen() works during the handover.
 +	 */
-+	i915_disable_vga_mem(dev);
++	intel_vga_disable_mem(i915);
 +
  	/* Only enable hotplug handling once the fbdev is fully set up. */
- 	intel_hpd_init(dev_priv);
+ 	intel_hpd_init(i915);
  
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index b5be0abbba35..653fae165940 100644
+index add00ec1f787..91f82efc6f8b 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
-@@ -124,6 +124,10 @@ i915_param_named_unsafe(invert_brightness, int, 0600,
+@@ -121,6 +121,10 @@ i915_param_named_unsafe(invert_brightness, int, 0600,
  i915_param_named(disable_display, bool, 0400,
  	"Disable display (default: false)");
  
@@ -69,90 +136,19 @@ index b5be0abbba35..653fae165940 100644
  	"Enable the MMIO debug code for the first N failures (default: off). "
  	"This may negatively affect performance.");
 diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
-index 3f14e9881a0d..fe5b63c40e95 100644
+index 45323732f099..e2cf311b222f 100644
 --- a/drivers/gpu/drm/i915/i915_params.h
 +++ b/drivers/gpu/drm/i915/i915_params.h
-@@ -76,7 +76,8 @@ struct drm_printer;
- 	param(bool, nuclear_pageflip, false) \
- 	param(bool, enable_dp_mst, true) \
- 	param(bool, enable_dpcd_backlight, false) \
--	param(bool, enable_gvt, false)
-+	param(bool, enable_gvt, false) \
-+	param(bool, enable_hd_vgaarb, false)
+@@ -78,7 +78,8 @@ struct drm_printer;
+ 	param(bool, verbose_state_checks, true, 0) \
+ 	param(bool, nuclear_pageflip, false, 0400) \
+ 	param(bool, enable_dp_mst, true, 0600) \
+-	param(bool, enable_gvt, false, 0400)
++	param(bool, enable_gvt, false, 0400) \
++	param(bool, enable_hd_vgaarb, false, 0400)
  
  #define MEMBER(T, member, ...) T member;
  struct i915_params {
-diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 421aac80a838..5eb9f44e35c4 100644
---- a/drivers/gpu/drm/i915/intel_display.c
-+++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -15136,6 +15136,37 @@ static void i915_disable_vga(struct drm_i915_private *dev_priv)
- 	POSTING_READ(vga_reg);
- }
- 
-+static void i915_enable_vga_mem(struct drm_device *dev)
-+{
-+	struct drm_i915_private *dev_priv = to_i915(dev);
-+	/* Enable VGA memory on Intel HD */
-+	if (i915_modparams.enable_hd_vgaarb && HAS_PCH_SPLIT(dev_priv)) {
-+		vga_get_uninterruptible(dev->pdev, VGA_RSRC_LEGACY_IO);
-+		outb(inb(VGA_MSR_READ) | VGA_MSR_MEM_EN, VGA_MSR_WRITE);
-+		vga_set_legacy_decoding(dev->pdev, VGA_RSRC_LEGACY_IO |
-+						   VGA_RSRC_LEGACY_MEM |
-+						   VGA_RSRC_NORMAL_IO |
-+						   VGA_RSRC_NORMAL_MEM);
-+		vga_put(dev->pdev, VGA_RSRC_LEGACY_IO);
-+	}
-+}
-+
-+void i915_disable_vga_mem(struct drm_device *dev)
-+{
-+	struct drm_i915_private *dev_priv = to_i915(dev);
-+	/* Disable VGA memory on Intel HD */
-+	if (i915_modparams.enable_hd_vgaarb && HAS_PCH_SPLIT(dev_priv)) {
-+		vga_get_uninterruptible(dev->pdev, VGA_RSRC_LEGACY_IO);
-+		outb(inb(VGA_MSR_READ) & ~VGA_MSR_MEM_EN, VGA_MSR_WRITE);
-+		vga_set_legacy_decoding(dev->pdev, VGA_RSRC_LEGACY_IO |
-+						   VGA_RSRC_NORMAL_IO |
-+						   VGA_RSRC_NORMAL_MEM);
-+		vga_put(dev->pdev, VGA_RSRC_LEGACY_IO);
-+	}
-+}
-+
-+
-+
- void intel_modeset_init_hw(struct drm_device *dev)
- {
- 	struct drm_i915_private *dev_priv = to_i915(dev);
-@@ -15768,6 +15799,7 @@ void i915_redisable_vga_power_on(struct drm_i915_private *dev_priv)
- 	if (!(I915_READ(vga_reg) & VGA_DISP_DISABLE)) {
- 		DRM_DEBUG_KMS("Something enabled VGA plane, disabling it\n");
- 		i915_disable_vga(dev_priv);
-+		i915_disable_vga_mem(&(dev_priv->drm));
- 	}
- }
- 
-@@ -16251,6 +16283,8 @@ void intel_modeset_cleanup(struct drm_device *dev)
- 
- 	intel_fbc_global_disable(dev_priv);
- 
-+	i915_enable_vga_mem(dev);
-+
- 	/* flush any delayed tasks or pending work */
- 	flush_scheduled_work();
- 
-diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index d5660ac1b0d6..280329683e3d 100644
---- a/drivers/gpu/drm/i915/intel_drv.h
-+++ b/drivers/gpu/drm/i915/intel_drv.h
-@@ -2433,4 +2433,7 @@ static inline void intel_crtc_enable_pipe_crc(struct intel_crtc *crtc)
- {
- }
- #endif
-+
-+extern void i915_disable_vga_mem(struct drm_device *dev);
-+
- #endif /* __INTEL_DRV_H__ */
 -- 
-2.21.0
+2.27.0
 
