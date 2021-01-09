@@ -1,4 +1,4 @@
-From 3b5e8f0ea4e4d076f247c7633bb82d5684a1fbac Mon Sep 17 00:00:00 2001
+From eb1f50a99e4f924b85781cbd864352caafe0f9ed Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] i915 VGA arbiter patch
@@ -9,15 +9,15 @@ By Alex Williamson
  drivers/gpu/drm/i915/display/intel_vga.c     | 39 ++++++++++++++++++--
  drivers/gpu/drm/i915/display/intel_vga.h     |  2 +
  drivers/gpu/drm/i915/i915_drv.c              |  6 +++
- drivers/gpu/drm/i915/i915_params.c           |  4 ++
+ drivers/gpu/drm/i915/i915_params.c           |  5 ++-
  drivers/gpu/drm/i915/i915_params.h           |  3 +-
- 6 files changed, 52 insertions(+), 4 deletions(-)
+ 6 files changed, 52 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/display/intel_display.c b/drivers/gpu/drm/i915/display/intel_display.c
-index 346846609f45..bd4a37ee4fee 100644
+index aabf09f89cad..833bc451285c 100644
 --- a/drivers/gpu/drm/i915/display/intel_display.c
 +++ b/drivers/gpu/drm/i915/display/intel_display.c
-@@ -18753,6 +18753,8 @@ static void intel_hpd_poll_fini(struct drm_i915_private *i915)
+@@ -18895,6 +18895,8 @@ static void intel_hpd_poll_fini(struct drm_i915_private *i915)
  /* part #1: call before irq uninstall */
  void intel_modeset_driver_remove(struct drm_i915_private *i915)
  {
@@ -104,12 +104,12 @@ index ba5b55b917f0..d74c72ee985e 100644
  void intel_vga_unregister(struct drm_i915_private *i915);
  
 diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 81a4621853db..d15a29c2e304 100644
+index acc32066cec3..49e14c963a18 100644
 --- a/drivers/gpu/drm/i915/i915_drv.c
 +++ b/drivers/gpu/drm/i915/i915_drv.c
-@@ -276,6 +276,12 @@ static int i915_driver_modeset_probe(struct drm_i915_private *i915)
+@@ -887,6 +887,12 @@ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	if (ret)
- 		goto cleanup_gem;
+ 		goto out_cleanup_gem;
  
 +	/*
 +	 * Must do this after fbcon init so that
@@ -117,29 +117,30 @@ index 81a4621853db..d15a29c2e304 100644
 +	 */
 +	intel_vga_disable_mem(i915);
 +
- 	/* Only enable hotplug handling once the fbdev is fully set up. */
- 	intel_hpd_init(i915);
+ 	i915_driver_register(i915);
  
+ 	enable_rpm_wakeref_asserts(&i915->runtime_pm);
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index add00ec1f787..91f82efc6f8b 100644
+index 7f139ea4a90b..79004b24573e 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
-@@ -121,6 +121,10 @@ i915_param_named_unsafe(invert_brightness, int, 0600,
+@@ -140,7 +140,10 @@ i915_param_named_unsafe(invert_brightness, int, 0400,
  i915_param_named(disable_display, bool, 0400,
  	"Disable display (default: false)");
  
-+
+-i915_param_named(mmio_debug, int, 0400,
 +i915_param_named(enable_hd_vgaarb, bool, 0444,
 +	"Enable support for VGA arbitration on Intel HD IGD. (default: false)");
 +
- i915_param_named(mmio_debug, int, 0600,
++i915_param_named(mmio_debug, int, 0600,
  	"Enable the MMIO debug code for the first N failures (default: off). "
  	"This may negatively affect performance.");
+ 
 diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
-index 45323732f099..e2cf311b222f 100644
+index 330c03e2b4f7..d35c7be594f6 100644
 --- a/drivers/gpu/drm/i915/i915_params.h
 +++ b/drivers/gpu/drm/i915/i915_params.h
-@@ -78,7 +78,8 @@ struct drm_printer;
+@@ -80,7 +80,8 @@ struct drm_printer;
  	param(bool, verbose_state_checks, true, 0) \
  	param(bool, nuclear_pageflip, false, 0400) \
  	param(bool, enable_dp_mst, true, 0600) \
@@ -150,5 +151,5 @@ index 45323732f099..e2cf311b222f 100644
  #define MEMBER(T, member, ...) T member;
  struct i915_params {
 -- 
-2.27.0
+2.30.0
 

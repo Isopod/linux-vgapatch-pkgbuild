@@ -1,16 +1,17 @@
-# Maintainer: Jan Alexander Steffens (heftig) <jan.steffens@gmail.com>
+# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=linux-vgapatch
-pkgver=5.7.4
-srcname=linux-5.7.4
-pkgrel=9
+pkgver=5.10.6
+srcname=linux-5.10.6
+pkgrel=1
 pkgdesc='Linux'
+
 #_srctag=v${pkgver%.*}-${pkgver##*.}
 url="https://www.kernel.org"
 arch=(x86_64)
 license=(GPL2)
 makedepends=(
-  bc kmod libelf pahole
+  bc kmod libelf pahole cpio perl tar xz
   xmlto python-sphinx python-sphinx_rtd_theme graphviz imagemagick
   git
 )
@@ -19,20 +20,16 @@ _srcname=archlinux-linux
 source=(
   "https://www.kernel.org/pub/linux/kernel/v5.x/${srcname}.tar.xz"
   config         # the main kernel config file
-  sphinx-workaround.patch
   '0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch'
   '0002-i915-VGA-arbiter-patch.patch'
 )
-
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
-# 'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
+  'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-
-sha256sums=('bca4f5ca3001a4cde341652af7fcaefed555be52a92e08ddf58a142eeb02b51a'
-            '623601ed9d7879dd9dba1cd50fc8051f9db508b49b4fc0c47c5a9eb9165fc04e'
-            '8cb21e0b3411327b627a9dd15b8eb773295a0d2782b1a41b2a8839d1b2f5778c'
+sha256sums=('SKIP'
+            'SKIP'
             'SKIP'
             'SKIP')
 
@@ -57,7 +54,7 @@ prepare() {
 #    echo "Applying patch $src..."
 #    patch -Np1 < "../$src"
 #  done
-  patch -p1 -i "${srcdir}/sphinx-workaround.patch"
+#  patch -p1 -i "${srcdir}/sphinx-workaround.patch"
 
   patch -p1 -i "${srcdir}/0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch"
   patch -p1 -i "${srcdir}/0002-i915-VGA-arbiter-patch.patch"
