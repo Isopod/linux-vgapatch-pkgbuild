@@ -1,22 +1,19 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=linux-vgapatch
-pkgver=5.10.6
-srcname=linux-5.10.6
+pkgver=5.13.4
 pkgrel=1
+srcname="linux-${pkgver}"
 pkgdesc='Linux'
-
-#_srctag=v${pkgver%.*}-${pkgver##*.}
 url="https://www.kernel.org"
 arch=(x86_64)
 license=(GPL2)
 makedepends=(
   bc kmod libelf pahole cpio perl tar xz
-  xmlto python-sphinx python-sphinx_rtd_theme graphviz imagemagick
+  xmlto python-sphinx graphviz imagemagick
   git
 )
 options=('!strip')
-_srcname=archlinux-linux
 source=(
   "https://www.kernel.org/pub/linux/kernel/v5.x/${srcname}.tar.xz"
   config         # the main kernel config file
@@ -28,7 +25,7 @@ validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('SKIP'
+sha256sums=('7192cd2f654aa6083451dea01b80748fe1eebcf2476a589ef4146590030e7d6c'
             'SKIP'
             'SKIP'
             'SKIP')
@@ -38,23 +35,12 @@ export KBUILD_BUILD_USER=$pkgbase
 export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EPOCH})"
 
 prepare() {
-  #cd $_srcname
   cd "${srcdir}/${srcname}"
 
   echo "Setting version..."
   scripts/setlocalversion --save-scmversion
   echo "-$pkgrel" > localversion.10-pkgrel
   echo "${pkgbase#linux}" > localversion.20-pkgname
-
-#  local src
-#  for src in "${source[@]}"; do
-#    src="${src%%::*}"
-#    src="${src##*/}"
-#    [[ $src = *.patch ]] || continue
-#    echo "Applying patch $src..."
-#    patch -Np1 < "../$src"
-#  done
-#  patch -p1 -i "${srcdir}/sphinx-workaround.patch"
 
   patch -p1 -i "${srcdir}/0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch"
   patch -p1 -i "${srcdir}/0002-i915-VGA-arbiter-patch.patch"
@@ -102,6 +88,7 @@ _package() {
 
 _package-headers() {
   pkgdesc="Headers and scripts for building modules for the $pkgdesc kernel"
+  depends=(pahole)
 
   cd "${srcdir}/${srcname}"
   local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
@@ -127,13 +114,16 @@ _package-headers() {
   install -Dt "$builddir/drivers/md" -m644 drivers/md/*.h
   install -Dt "$builddir/net/mac80211" -m644 net/mac80211/*.h
 
-  # http://bugs.archlinux.org/task/13146
+  # https://bugs.archlinux.org/task/13146
   install -Dt "$builddir/drivers/media/i2c" -m644 drivers/media/i2c/msp3400-driver.h
 
-  # http://bugs.archlinux.org/task/20402
+  # https://bugs.archlinux.org/task/20402
   install -Dt "$builddir/drivers/media/usb/dvb-usb" -m644 drivers/media/usb/dvb-usb/*.h
   install -Dt "$builddir/drivers/media/dvb-frontends" -m644 drivers/media/dvb-frontends/*.h
   install -Dt "$builddir/drivers/media/tuners" -m644 drivers/media/tuners/*.h
+
+  # https://bugs.archlinux.org/task/71392
+  install -Dt "$builddir/drivers/iio/common/hid-sensors" -m644 drivers/iio/common/hid-sensors/*.h
 
   echo "Installing KConfig files..."
   find . -name 'Kconfig*' -exec install -Dm644 {} "$builddir/{}" \;
