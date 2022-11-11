@@ -1,7 +1,7 @@
 # Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
 
 pkgbase=linux-vgapatch
-pkgver=5.13.4
+pkgver=6.0.8
 pkgrel=1
 srcname="linux-${pkgver}"
 pkgdesc='Linux'
@@ -15,7 +15,7 @@ makedepends=(
 )
 options=('!strip')
 source=(
-  "https://www.kernel.org/pub/linux/kernel/v5.x/${srcname}.tar.xz"
+  "https://www.kernel.org/pub/linux/kernel/v6.x/${srcname}.tar.xz"
   config         # the main kernel config file
   '0001-pci-Enable-overrides-for-missing-ACS-capabilities.patch'
   '0002-i915-VGA-arbiter-patch.patch'
@@ -25,7 +25,7 @@ validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('7192cd2f654aa6083451dea01b80748fe1eebcf2476a589ef4146590030e7d6c'
+sha256sums=('0de4f83996951c6faf9b2225db4f645882c47b1a09198190f97bd46e5f5fa257'
             'SKIP'
             'SKIP'
             'SKIP')
