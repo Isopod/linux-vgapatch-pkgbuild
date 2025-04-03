@@ -1,4 +1,4 @@
-From d4f66cc24657ebbe454147888a7e6b2534027d4a Mon Sep 17 00:00:00 2001
+From 809932f1c3abb17b556e69bf3b751166cca9b164 Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 14:44:35 +0200
 Subject: [PATCH 1/2] pci: Enable overrides for missing ACS capabilities
@@ -9,10 +9,10 @@ By Alex Williamson
  1 file changed, 102 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 4944798e75b5..7b5604bde4a6 100644
+index 0a1f668999ce..58449edf2a36 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -4238,6 +4238,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
+@@ -4393,6 +4393,106 @@ DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
  
@@ -119,15 +119,15 @@ index 4944798e75b5..7b5604bde4a6 100644
  /*
   * MIC x200 NTB forwards PCIe traffic using multiple alien RIDs. They have to
   * be added as aliases to the DMA device in order to allow buffer access
-@@ -4980,6 +5080,8 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_NXP, 0x8d9b, pci_quirk_nxp_rp_acs },
- 	/* Zhaoxin Root/Downstream Ports */
+@@ -5170,6 +5270,8 @@ static const struct pci_dev_acs_enabled {
  	{ PCI_VENDOR_ID_ZHAOXIN, PCI_ANY_ID, pci_quirk_zhaoxin_pcie_ports_acs },
+ 	/* Wangxun nics */
+ 	{ PCI_VENDOR_ID_WANGXUN, PCI_ANY_ID, pci_quirk_wangxun_nic_acs },
 +	/* Any */
 +	{ PCI_ANY_ID, PCI_ANY_ID, pcie_acs_overrides },
  	{ 0 }
  };
  
 -- 
-2.38.1
+2.49.0
 
