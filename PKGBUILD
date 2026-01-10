@@ -1,7 +1,7 @@
-# Maintainer: Jan Alexander Steffens (heftig) <heftig@archlinux.org>
+# Maintainer: Philip Zander <philip.zander@gmail.com>
 
 pkgbase=linux-vgapatch
-pkgver=6.13.9
+pkgver=6.18.4
 pkgrel=1
 srcname="linux-${pkgver}"
 pkgdesc='Linux'
@@ -25,7 +25,7 @@ validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('53e7a3f028b6119ba499245bde0fa10275752817408a4a36b5a34ad74a4727b2'
+sha256sums=('f850139ca5f79c1bf6bb8b32f92e212aadca97bdaef8a83a7cf4ac4d6a525fab'
             'SKIP'
             'SKIP'
             'SKIP')
