@@ -1,7 +1,7 @@
 # Maintainer: Philip Zander <philip.zander@gmail.com>
 
 pkgbase=linux-vgapatch
-pkgver=6.18.5
+pkgver=6.19.1
 pkgrel=1
 srcname="linux-${pkgver}"
 pkgdesc='Linux'
@@ -9,11 +9,31 @@ url="https://www.kernel.org"
 arch=(x86_64)
 license=(GPL-2.0-only)
 makedepends=(
-  bc kmod libelf pahole cpio perl tar xz
-  xmlto python-sphinx graphviz imagemagick
+  bc
+  cpio
+  gettext
   git
+  libelf
+  pahole
+  perl
+  python
+  rust
+  rust-bindgen
+  rust-src
+  tar
+  xz
+
+  # htmldocs
+  graphviz
+  imagemagick
+  python-sphinx
+  python-yaml
+  texlive-latexextra
 )
-options=('!strip')
+options=(
+  !debug
+  !strip
+)
 source=(
   "https://www.kernel.org/pub/linux/kernel/v6.x/${srcname}.tar.xz"
   config         # the main kernel config file
@@ -25,7 +45,7 @@ validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('189d1f409cef8d0d234210e04595172df392f8cb297e14b447ed95720e2fd940'
+sha256sums=('0b83f531a4d32305c093b65a14345589622c887704c334a88453d423c78993ee'
             'SKIP'
             'SKIP'
             'SKIP')

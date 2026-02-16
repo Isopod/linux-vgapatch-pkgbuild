@@ -1,4 +1,4 @@
-From e76745176937b0a93d947a3863c2cf84a0dfde3e Mon Sep 17 00:00:00 2001
+From f268b90686a97ee72352be046070608ed159a66a Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] i915 VGA arbiter patch
@@ -17,18 +17,18 @@ By Alex Williamson
  9 files changed, 106 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/display/intel_display_driver.c b/drivers/gpu/drm/i915/display/intel_display_driver.c
-index cf1c14412abe..92ca07ee133b 100644
+index 7e000ba3e08b..eca5d2d18daa 100644
 --- a/drivers/gpu/drm/i915/display/intel_display_driver.c
 +++ b/drivers/gpu/drm/i915/display/intel_display_driver.c
-@@ -32,6 +32,7 @@
+@@ -35,6 +35,7 @@
  #include "intel_display_debugfs.h"
  #include "intel_display_driver.h"
  #include "intel_display_irq.h"
 +#include "intel_display_params.h"
  #include "intel_display_power.h"
  #include "intel_display_types.h"
- #include "intel_display_wa.h"
-@@ -558,6 +559,12 @@ int intel_display_driver_probe(struct intel_display *display)
+ #include "intel_display_utils.h"
+@@ -555,6 +556,12 @@ int intel_display_driver_probe(struct intel_display *display)
  
  	skl_watermark_ipc_init(display);
  
@@ -41,7 +41,7 @@ index cf1c14412abe..92ca07ee133b 100644
  	return 0;
  }
  
-@@ -603,6 +610,8 @@ void intel_display_driver_remove(struct intel_display *display)
+@@ -600,6 +607,8 @@ void intel_display_driver_remove(struct intel_display *display)
  	if (!HAS_DISPLAY(display))
  		return;
  
@@ -210,10 +210,10 @@ index 16d699f3b641..2cc33a5be24e 100644
  void intel_vga_unregister(struct intel_display *display);
  
 diff --git a/drivers/gpu/drm/i915/i915_driver.c b/drivers/gpu/drm/i915/i915_driver.c
-index a28c3710c4d5..5e4af2f4a194 100644
+index c97b76771917..77d25dabd7db 100644
 --- a/drivers/gpu/drm/i915/i915_driver.c
 +++ b/drivers/gpu/drm/i915/i915_driver.c
-@@ -68,6 +68,7 @@
+@@ -70,6 +70,7 @@
  #include "display/intel_sbi.h"
  #include "display/intel_sprite_uapi.h"
  #include "display/skl_watermark.h"
@@ -221,7 +221,7 @@ index a28c3710c4d5..5e4af2f4a194 100644
  
  #include "gem/i915_gem_context.h"
  #include "gem/i915_gem_create.h"
-@@ -841,6 +842,11 @@ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -855,6 +856,11 @@ int i915_driver_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	ret = intel_display_driver_probe(display);
  	if (ret)
  		goto out_cleanup_gem;
@@ -260,10 +260,10 @@ index 0fbcb5b6d7bf..a7a394245511 100644
  #define MEMBER(T, member, ...) T member;
  struct i915_params {
 diff --git a/drivers/gpu/drm/xe/compat-i915-headers/i915_drv.h b/drivers/gpu/drm/xe/compat-i915-headers/i915_drv.h
-index b8269391bc69..6b7b6b7aabcd 100644
+index 3e79a74ff7de..2ad6e383659e 100644
 --- a/drivers/gpu/drm/xe/compat-i915-headers/i915_drv.h
 +++ b/drivers/gpu/drm/xe/compat-i915-headers/i915_drv.h
-@@ -20,6 +20,13 @@ static inline struct drm_i915_private *to_i915(const struct drm_device *dev)
+@@ -19,6 +19,13 @@ static inline struct drm_i915_private *to_i915(const struct drm_device *dev)
  	return container_of(dev, struct drm_i915_private, drm);
  }
  
@@ -278,5 +278,5 @@ index b8269391bc69..6b7b6b7aabcd 100644
  #define IS_PLATFORM(xe, x) ((xe)->info.platform == x)
  #define IS_I915G(dev_priv)	(dev_priv && 0)
 -- 
-2.52.0
+2.53.0
 
