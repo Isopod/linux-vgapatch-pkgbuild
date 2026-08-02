@@ -1,7 +1,7 @@
 # Maintainer: Philip Zander <philip.zander@gmail.com>
 
 pkgbase=linux-vgapatch
-pkgver=6.19.1
+pkgver=6.19.14
 pkgrel=1
 srcname="linux-${pkgver}"
 pkgdesc='Linux'
@@ -45,7 +45,7 @@ validpgpkeys=(
   '647F28654894E3BD457199BE38DBBDC86092693E'  # Greg Kroah-Hartman
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
-sha256sums=('0b83f531a4d32305c093b65a14345589622c887704c334a88453d423c78993ee'
+sha256sums=('cde8bf6739be4a0777fedbbba5330b8188c55680c45a922a4dfa289cbec6f185'
             'SKIP'
             'SKIP'
             'SKIP')

@@ -1,4 +1,4 @@
-From f268b90686a97ee72352be046070608ed159a66a Mon Sep 17 00:00:00 2001
+From 9fed6ddfa8ccc03e0978bf84ffcf79ed03af5c50 Mon Sep 17 00:00:00 2001
 From: Philip Zander <philip.zander@gmail.com>
 Date: Wed, 1 Jul 2015 16:04:33 +0200
 Subject: [PATCH 2/2] i915 VGA arbiter patch
@@ -278,5 +278,5 @@ index 3e79a74ff7de..2ad6e383659e 100644
  #define IS_PLATFORM(xe, x) ((xe)->info.platform == x)
  #define IS_I915G(dev_priv)	(dev_priv && 0)
 -- 
-2.53.0
+2.55.0
 
